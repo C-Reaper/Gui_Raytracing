@@ -58,6 +58,71 @@ void Setup(AlxWindow* w){
         }
     );
 
+    Raytracing_Add(
+        &rt,
+        (Raytracing_Object){
+            .fn_hit = (char(*)(const struct Raytracing_Object* const,Raytracing_Hit* const,Vec3D,Vec3D))Raytracing_Plane_Hit,
+            .col = GREEN,
+            .light = 0.0f,
+            .rp = Raytracing_Plane_New(
+                Vec3D_New(0.0f,-5.0f,0.0f),
+                Vec3D_New(0.0f,1.0f,0.0f)
+            )
+        }
+    );
+
+    Raytracing_Add(
+        &rt,
+        (Raytracing_Object){
+            .fn_hit = (char(*)(const struct Raytracing_Object* const,Raytracing_Hit* const,Vec3D,Vec3D))Raytracing_AABox_Hit,
+            .col = BLUE,
+            .light = 0.0f,
+            .raab = Raytracing_AABox_New(
+                Vec3D_New(0.0f,2.0f,-4.0f),
+                Vec3D_New(1.0f,1.0f,2.0f)
+            )
+        }
+    );
+    Raytracing_Add(
+        &rt,
+        (Raytracing_Object){
+            .fn_hit = (char(*)(const struct Raytracing_Object* const,Raytracing_Hit* const,Vec3D,Vec3D))Raytracing_Disk_Hit,
+            .col = RED,
+            .light = 0.0f,
+            .rd = Raytracing_Disk_New(
+                Vec3D_New(2.0f,2.0f,-4.0f),
+                Vec3D_New(0.0f,1.0f,0.0f),
+                1.0f
+            )
+        }
+    );
+    Raytracing_Add(
+        &rt,
+        (Raytracing_Object){
+            .fn_hit = (char(*)(const struct Raytracing_Object* const,Raytracing_Hit* const,Vec3D,Vec3D))Raytracing_Cylinder_Hit,
+            .col = ORANGE,
+            .light = 0.0f,
+            .rc = Raytracing_Cylinder_New(
+                Vec3D_New(8.0f,2.0f,-4.0f),
+                1.0f
+            )
+        }
+    );
+    Raytracing_Add(
+        &rt,
+        (Raytracing_Object){
+            .fn_hit = (char(*)(const struct Raytracing_Object* const,Raytracing_Hit* const,Vec3D,Vec3D))Raytracing_Cone_Hit,
+            .col = BROWN,
+            .light = 0.0f,
+            .rcn = Raytracing_Cone_New(
+                Vec3D_New(4.0f,4.0f,-4.0f),
+                1.0f,
+                2.0f
+            )
+        }
+    );
+
+    
     for(int i = 0;i<5;i++){
         for(int j = 0;j<5;j++){
             Raytracing_Add(
@@ -83,43 +148,47 @@ void Setup(AlxWindow* w){
     /*
     for(int i = 0;i<5;i++){
         for(int j = 0;j<5;j++){
-            if(i + j % 2 == 0){
-                Raytracing_Add(
-                    &rt,
-                    (Raytracing_Object){
-                        .fn_hit = (char(*)(const struct Raytracing_Object* const,Raytracing_Hit* const,Vec3D,Vec3D))Raytracing_Sphere_Hit,
-                        .col = colors[
-                                Random_u32_MinMax(
-                                    0U,
-                                    sizeof(colors) / sizeof(*colors)
-                                )
-                        ],
-                        .light = 0.0f,
-                        .rs = Raytracing_Sphere_New(
-                            Vec3D_New(j * 2.0f,i * 2.0f,3.0f),
-                            1.0f
+            const int v = i + j % 2;
+            
+            Raytracing_Object ro = {
+                .fn_hit = (
+                    v == 0 ? (char(*)(const struct Raytracing_Object* const,Raytracing_Hit* const,Vec3D,Vec3D))Raytracing_Sphere_Hit : (
+                    v == 1 ? (char(*)(const struct Raytracing_Object* const,Raytracing_Hit* const,Vec3D,Vec3D))Raytracing_AABox_Hit : (
+                    v == 2 ? (char(*)(const struct Raytracing_Object* const,Raytracing_Hit* const,Vec3D,Vec3D))Raytracing_Plane_Hit : (
+                             (char(*)(const struct Raytracing_Object* const,Raytracing_Hit* const,Vec3D,Vec3D))Raytracing_Disk_Hit
+                )))),
+                .col = colors[
+                        Random_u32_MinMax(
+                            0U,
+                            sizeof(colors) / sizeof(*colors)
                         )
-                    }
+                ],
+                .light = 0.0f,
+                
+            };
+
+            if(v == 0)
+                ro.rs = Raytracing_Sphere_New(
+                    Vec3D_New(j * 2.0f,i * 2.0f,3.0f),
+                    1.0f
                 );
-            }else{
-                Raytracing_Add(
-                    &rt,
-                    (Raytracing_Object){
-                        .fn_hit = (char(*)(const struct Raytracing_Object* const,Raytracing_Hit* const,Vec3D,Vec3D))Raytracing_AABox_Hit,
-                        .col = colors[
-                                Random_u32_MinMax(
-                                    0U,
-                                    sizeof(colors) / sizeof(*colors)
-                                )
-                        ],
-                        .light = 0.0f,
-                        .raab = Raytracing_AABox_New(
-                            Vec3D_New(j * 2.0f,i * 2.0f,3.0f),
-                            Vec3D_New(1.0f,1.0f,2.0f)
-                        )
-                    }
+            else if(v == 1)
+               ro.raab = Raytracing_AABox_New(
+                    Vec3D_New(j * 2.0f,i * 2.0f,3.0f),
+                    Vec3D_New(1.0f,1.0f,2.0f)
                 );
-            }
+            else if(v == 2)
+                ro.rp = Raytracing_Plane_New(
+                    Vec3D_New(j * 2.0f,i * 2.0f,3.0f),
+                    Vec3D_New(0.0f,0.0f,-1.0f)
+                );
+            else
+                ro.rd = Raytracing_Disk_New(
+                    Vec3D_New(j * 2.0f,i * 2.0f,3.0f),
+                    Vec3D_New(1.0f,1.0f,0.0f)
+                );
+
+            Raytracing_Add(&rt,ro);
         }
     }
     */
